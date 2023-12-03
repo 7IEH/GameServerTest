@@ -1,0 +1,3 @@
+﻿  GameServer.cpp
+D:\C++\API\SelectModel\SelecModel\Server\GameServer.cpp(63,11): warning C4996: 'inet_ntoa': Use inet_ntop() or InetNtop() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+  Server.vcxproj -> D:\C++\API\SelectModel\SelecModel\x64\Debug\Server.exe
