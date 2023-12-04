@@ -18,3 +18,6 @@ struct Session
 {
 	SOCKET m_Sock;
 };
+
+u_long BLOCKING = 0;
+u_long NONBLOCKING = 1;
