@@ -69,7 +69,7 @@ int main()
 		}
 
 		cout << "SendData\n";
-
+		
 		while (true)
 		{
 			char recvBuffer[1000];
@@ -79,7 +79,7 @@ int main()
 				if (::WSAGetLastError() == WSAEWOULDBLOCK)
 					continue;
 
-				HandleError("Send Error");
+				HandleError("Recv Error");
 				return 0;
 			}
 
