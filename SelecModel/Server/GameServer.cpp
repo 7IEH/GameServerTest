@@ -67,10 +67,19 @@ int main()
 
 		for (Session ss : s)
 		{
-			FD_SET(ss.m_Sock, &read);
-			FD_SET(ss.m_Sock, &write);
+			if (ss.recvLen <= ss.sendLen)
+			{
+				FD_SET(ss.m_Sock, &read);
+			}
+			else
+			{
+				FD_SET(ss.m_Sock, &write);
+			}
 		}
 
+		// select socket 각각 buffer의 준비가 완료된 상태
+		// read 즉, recvbuffer(커널영역)에서 userbuffer로 데이터를 전송했을 경우
+		// write 즉, sendbuffer가 수신 측 recvbuffer에 데이터를 보냈을 경우( 즉, 수신 측 recvbuffer가 데이터가 꽉차있지 않을 경우)
 		err = ::select(0, &read, &write, NULL, NULL);
 		if (err == SOCKET_ERROR)
 		{
@@ -84,27 +93,39 @@ int main()
 			s.push_back(Session{clientSocket});
 		}
 
-		for (Session ss : s)
+		for (Session& ss : s)
 		{
-			char recvBuffer[1000] = "";
 			if (FD_ISSET(ss.m_Sock, &read) > 0)
 			{
-				recv(ss.m_Sock, recvBuffer, sizeof(recvBuffer), 0);
-				cout << recvBuffer << "Test\n";
+				int recvLen = recv(ss.m_Sock, ss.buffer, sizeof(ss.buffer), 0);
+				cout << ss.buffer << "Test\n";
+				ss.recvLen = recvLen;
 			}
 		}
 
 
 		// send의 조건이 상대 recv buffer 비어져있을때
-		for (Session ss : s)
+		for (Session& ss : s)
 		{
-			char sendBuffer[1000] = "Test";
 			if (FD_ISSET(ss.m_Sock, &write) > 0)
 			{
-				for (Session ss : s)
+				for (Session& _ss : s)
 				{
-					send(ss.m_Sock, sendBuffer, sizeof(sendBuffer), 0);
-					cout << sendBuffer << "Test\n";
+					if (&_ss == &ss)
+					{
+						continue;
+					}
+					else
+					{
+						int sendLen = send(_ss.m_Sock, &ss.buffer[ss.sendLen], ss.recvLen-ss.sendLen, 0);
+						cout << ss.buffer[ss.sendLen] << "Test\n";
+						ss.sendLen += sendLen;
+						if (ss.recvLen == ss.sendLen)
+						{
+							ss.recvLen = 0;
+							ss.sendLen = 0;
+						}
+					}
 				}
 			}
 		}

@@ -17,6 +17,9 @@ void HandleError(string s)
 struct Session
 {
 	SOCKET m_Sock;
+	char buffer[1000];
+	int recvLen = 0;
+	int sendLen = 0;
 };
 
 u_long BLOCKING = 0;

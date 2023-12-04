@@ -3,6 +3,10 @@
 // 논블로킹 방식으로
 // winsock 초기화 -> socket 만들기 -> server address 설정 -> connect 하기
 
+SOCKET clientSocket;
+
+void recvFunc();
+
 int main()
 {
 	WSADATA wsData;
@@ -14,8 +18,8 @@ int main()
 	}
 
 	// IPv4 체계, TCP 연결
-	SOCKET clientSocekt = ::socket(AF_INET, SOCK_STREAM, 0);
-	if (clientSocekt == INVALID_SOCKET)
+	clientSocket = ::socket(AF_INET, SOCK_STREAM, 0);
+	if (clientSocket == INVALID_SOCKET)
 	{
 		HandleError("Socket CreateError");
 		return 0;
@@ -23,8 +27,7 @@ int main()
 
 	// Nonblocking socket argp == 1(except 0)
 	// blocking socket argp == 0
-
-	ioctlsocket(clientSocekt, FIONBIO, &NONBLOCKING);
+	ioctlsocket(clientSocket, FIONBIO, &NONBLOCKING);
 
 	SOCKADDR_IN serverAddr = {};
 	::memset(&serverAddr, 0, sizeof(serverAddr));
@@ -32,9 +35,10 @@ int main()
 	inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
 	serverAddr.sin_port = htons(7777);
 
+	
 	while (true)
-	{
-		err = ::connect(clientSocekt, (SOCKADDR*)&serverAddr, sizeof(serverAddr));
+	{	
+		err = ::connect(clientSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr));
 		if (err == SOCKET_ERROR)
 		{
 			// 논블로킹이기 때문에 반환값이 오지 않아도
@@ -53,12 +57,15 @@ int main()
 	}
 	
 	cout << "Success Connectd Server!" << '\n';
+	
+	// recv는 계속 아니면 send에서 cin으로 받아야 진행됨
+	std::thread t1(recvFunc);
 
 	while (true)
 	{
 		char sendBuffer[1000] = "";
 		cin >> sendBuffer;
-		err = ::send(clientSocekt, sendBuffer, sizeof(sendBuffer), 0);
+		err = ::send(clientSocket, sendBuffer, sizeof(sendBuffer), 0);
 		if (err == SOCKET_ERROR)
 		{
 			if (::WSAGetLastError() == WSAEWOULDBLOCK)
@@ -69,25 +76,31 @@ int main()
 		}
 
 		cout << "SendData\n";
-		
-		while (true)
-		{
-			char recvBuffer[1000];
-			err = recv(clientSocekt, recvBuffer, sizeof(recvBuffer), 0);
-			if (err == SOCKET_ERROR)
-			{
-				if (::WSAGetLastError() == WSAEWOULDBLOCK)
-					continue;
-
-				HandleError("Recv Error");
-				return 0;
-			}
-
-			cout << "RecvData : " << recvBuffer << '\n';
-			break;
-		}
+	
 	}
+
+	t1.join();
 
 	WSACleanup();
 	return 0;
+}
+
+void recvFunc()
+{
+	while (true)
+	{
+		char recvBuffer[1000];
+		int err = recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+		if (err == SOCKET_ERROR)
+		{
+			if (::WSAGetLastError() == WSAEWOULDBLOCK)
+				continue;
+
+			HandleError("Recv Error");
+			return;
+		}
+
+		cout << "RecvData : " << recvBuffer << '\n';
+		break;
+	}
 }
