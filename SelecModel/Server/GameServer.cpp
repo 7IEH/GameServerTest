@@ -52,9 +52,9 @@ int main()
 	SOCKADDR_IN clientAddr = {};
 	::memset(&clientAddr, 0, sizeof(clientAddr));
 	int clientSize = sizeof(clientAddr);
-	
-	vector<Session> s;
 
+	vector<Session> s;
+	
 	fd_set read;
 	fd_set write;
 
@@ -65,7 +65,7 @@ int main()
 
 		FD_SET(listenSocket, &read);
 
-		for (Session ss : s)
+		for (Session& ss : s)
 		{
 			if (ss.recvLen <= ss.sendLen)
 			{
@@ -90,7 +90,7 @@ int main()
 		{
 			SOCKET clientSocket = ::accept(listenSocket, (SOCKADDR*)&clientAddr, &clientSize);
 			cout << inet_ntoa(clientAddr.sin_addr) << " : " << ntohs(clientAddr.sin_port) << "님이 접속했습니다!\n";
-			s.push_back(Session{clientSocket});
+			s.push_back(Session{ clientSocket });
 		}
 
 		for (Session& ss : s)
@@ -100,9 +100,9 @@ int main()
 				int recvLen = recv(ss.m_Sock, ss.buffer, sizeof(ss.buffer), 0);
 				cout << ss.buffer << "Test\n";
 				ss.recvLen = recvLen;
+				ss.broadRecvLen = recvLen;
 			}
 		}
-
 
 		// send의 조건이 상대 recv buffer 비어져있을때
 		for (Session& ss : s)
@@ -117,20 +117,17 @@ int main()
 					}
 					else
 					{
-						int sendLen = send(_ss.m_Sock, &ss.buffer[ss.sendLen], ss.recvLen-ss.sendLen, 0);
-						cout << ss.buffer[ss.sendLen] << "Test\n";
+						int sendLen = send(_ss.m_Sock, &ss.buffer[ss.sendLen], ss.recvLen - ss.sendLen, 0);
+						cout << ss.buffer[ss.sendLen] << "Test2\n";
 						ss.sendLen += sendLen;
-						if (ss.recvLen == ss.sendLen)
-						{
-							ss.recvLen = 0;
-							ss.sendLen = 0;
-						}
 					}
 				}
+				ss.recvLen = 0;
+				ss.sendLen = 0;
 			}
 		}
 	}
-	
+
 	WSACleanup();
 	return 0;
 }

@@ -7,6 +7,12 @@ SOCKET clientSocket;
 
 void recvFunc();
 
+struct buffer
+{
+	int x;
+	int y;
+};
+
 int main()
 {
 	WSADATA wsData;
@@ -89,7 +95,7 @@ void recvFunc()
 {
 	while (true)
 	{
-		char recvBuffer[1000];
+		char recvBuffer[1000] = {};
 		int err = recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
 		if (err == SOCKET_ERROR)
 		{
@@ -101,6 +107,5 @@ void recvFunc()
 		}
 
 		cout << "RecvData : " << recvBuffer << '\n';
-		break;
 	}
 }
