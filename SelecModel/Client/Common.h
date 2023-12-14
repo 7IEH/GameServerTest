@@ -6,6 +6,7 @@
 #include <mswsock.h>
 #include <ws2tcpip.h>
 #include <thread>
+#include <Windows.h>
 #pragma comment(lib, "ws2_32.lib")
 using namespace std;
 
@@ -21,7 +22,11 @@ struct Session
 	char buffer[1000];
 	int recvLen = 0;
 	int sendLen = 0;
+	bool _register = false;
+	static int _index;
 };
+
+int Session::_index = 0;
 
 u_long BLOCKING = 0;
 u_long NONBLOCKING = 1;

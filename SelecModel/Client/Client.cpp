@@ -41,9 +41,9 @@ int main()
 	inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
 	serverAddr.sin_port = htons(7777);
 
-	
+
 	while (true)
-	{	
+	{
 		err = ::connect(clientSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr));
 		if (err == SOCKET_ERROR)
 		{
@@ -61,28 +61,83 @@ int main()
 			return 0;
 		}
 	}
-	
+
+	thread t1(recvFunc);
+
 	cout << "Success Connectd Server!" << '\n';
-	
+
 	// recv는 계속 아니면 send에서 cin으로 받아야 진행됨
-	std::thread t1(recvFunc);
+	fd_set read;
+	fd_set write;
+
+	int dir = 0;
 
 	while (true)
 	{
-		char sendBuffer[1000] = "";
-		cin >> sendBuffer;
-		err = ::send(clientSocket, sendBuffer, sizeof(sendBuffer), 0);
-		if (err == SOCKET_ERROR)
-		{
-			if (::WSAGetLastError() == WSAEWOULDBLOCK)
-				continue;
+		dir = -1;
+		FD_ZERO(&read);
+		FD_ZERO(&write);
 
-			HandleError("Send Error");
-			return 0;
+		FD_SET(clientSocket, &read);
+
+		if (GetAsyncKeyState(VK_DOWN) & 0x8001)
+		{
+			FD_ISSET(clientSocket, &write);
+			dir = 0;
 		}
 
-		cout << "SendData\n";
-	
+		if (GetAsyncKeyState(VK_LEFT) & 0x8001)
+		{
+			FD_ISSET(clientSocket, &write);
+			dir = 1;
+		}
+
+		if (GetAsyncKeyState(VK_RIGHT) & 0x8001)
+		{
+			FD_ISSET(clientSocket, &write);
+			dir = 2;
+		}
+
+		if (GetAsyncKeyState(VK_UP) & 0x8001)
+		{
+			FD_ISSET(clientSocket, &write);
+			dir = 3;
+		}
+
+		select(0, &read, &write, nullptr, 0);
+
+		if (FD_ISSET(clientSocket, &read))
+		{
+			char recvBuffer[1000] = {};
+			int err = recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+			if (err == SOCKET_ERROR)
+			{
+				if (::WSAGetLastError() == WSAEWOULDBLOCK)
+					continue;
+
+				HandleError("Recv Error");
+				return 0;
+			}
+
+			cout << "RecvData : " << recvBuffer << '\n';
+		}
+		else if (FD_ISSET(clientSocket, &write))
+		{
+			char lowbyte = (dir & 255);
+			char highbyte = ((dir >> 8) & 255);
+			char sendBuffer = highbyte;
+			err = ::send(clientSocket, &sendBuffer, sizeof(sendBuffer), 0);
+			if (err == SOCKET_ERROR)
+			{
+				if (::WSAGetLastError() == WSAEWOULDBLOCK)
+					continue;
+
+				HandleError("Send Error");
+				return 0;
+			}
+
+			cout << "SendData\n";
+		}
 	}
 
 	t1.join();
@@ -95,17 +150,6 @@ void recvFunc()
 {
 	while (true)
 	{
-		char recvBuffer[1000] = {};
-		int err = recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
-		if (err == SOCKET_ERROR)
-		{
-			if (::WSAGetLastError() == WSAEWOULDBLOCK)
-				continue;
-
-			HandleError("Recv Error");
-			return;
-		}
-
-		cout << "RecvData : " << recvBuffer << '\n';
+		
 	}
 }

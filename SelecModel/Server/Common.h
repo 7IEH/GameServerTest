@@ -5,6 +5,7 @@
 #include <winsock2.h>
 #include <mswsock.h>
 #include <ws2tcpip.h>
+#include <Windows.h>
 #pragma comment(lib, "ws2_32.lib")
 using namespace std;
 
@@ -17,17 +18,14 @@ void HandleError(string s)
 struct Session
 {
 	SOCKET m_Sock;
-	//Player
 	char buffer[1000];
 	int recvLen = 0;
 	int sendLen = 0;
-
-	int broadRecvLen = 0;
-	int broadSendLen = 0;
-
-	int PositionX;
-	int PositionY;
+	bool _register = false;
+	int index;
 };
+
+static int _index = 0;
 
 u_long BLOCKING = 0;
 u_long NONBLOCKING = 1;

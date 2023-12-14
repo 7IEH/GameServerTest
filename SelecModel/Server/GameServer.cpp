@@ -54,7 +54,8 @@ int main()
 	int clientSize = sizeof(clientAddr);
 
 	vector<Session> s;
-	
+	s.resize(15);
+
 	fd_set read;
 	fd_set write;
 
@@ -67,11 +68,12 @@ int main()
 
 		for (Session& ss : s)
 		{
-			if (ss.recvLen <= ss.sendLen)
-			{
-				FD_SET(ss.m_Sock, &read);
-			}
-			else
+			if (ss.m_Sock == NULL)
+				continue;
+
+
+			FD_SET(ss.m_Sock, &read);
+			if (ss.recvLen > 0)
 			{
 				FD_SET(ss.m_Sock, &write);
 			}
@@ -90,7 +92,9 @@ int main()
 		{
 			SOCKET clientSocket = ::accept(listenSocket, (SOCKADDR*)&clientAddr, &clientSize);
 			cout << inet_ntoa(clientAddr.sin_addr) << " : " << ntohs(clientAddr.sin_port) << "님이 접속했습니다!\n";
-			s.push_back(Session{ clientSocket });
+			s[_index].m_Sock = clientSocket;
+			s[_index].index = _index;
+			_index++;
 		}
 
 		for (Session& ss : s)
@@ -98,9 +102,8 @@ int main()
 			if (FD_ISSET(ss.m_Sock, &read) > 0)
 			{
 				int recvLen = recv(ss.m_Sock, ss.buffer, sizeof(ss.buffer), 0);
-				cout << ss.buffer << "Test\n";
+				cout << ss.buffer << "수신\n";
 				ss.recvLen = recvLen;
-				ss.broadRecvLen = recvLen;
 			}
 		}
 
@@ -109,6 +112,15 @@ int main()
 		{
 			if (FD_ISSET(ss.m_Sock, &write) > 0)
 			{
+				if (!ss._register)
+				{
+					ss._register = true;
+					char* buffer = (char*)&ss.index;
+					int sendLen = send(ss.m_Sock, buffer, sizeof(ss.index), 0);
+					cout << sendLen << '\n';
+					continue;
+				}
+
 				for (Session& _ss : s)
 				{
 					if (&_ss == &ss)
@@ -118,7 +130,7 @@ int main()
 					else
 					{
 						int sendLen = send(_ss.m_Sock, &ss.buffer[ss.sendLen], ss.recvLen - ss.sendLen, 0);
-						cout << ss.buffer[ss.sendLen] << "Test2\n";
+						cout << ss.buffer[ss.sendLen] << "송신\n";
 						ss.sendLen += sendLen;
 					}
 				}
