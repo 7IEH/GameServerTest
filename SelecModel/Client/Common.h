@@ -10,11 +10,11 @@
 #pragma comment(lib, "ws2_32.lib")
 using namespace std;
 
-void HandleError(string s)
-{
-	int err = ::WSAGetLastError();
-	cout << s << " Error" << ", ErrorCode : " << err << '\n';
-}
+//void HandleError(string s)
+//{
+//	int err = ::WSAGetLastError();
+//	cout << s << " Error" << ", ErrorCode : " << err << '\n';
+//}
 
 struct Session
 {
@@ -26,7 +26,7 @@ struct Session
 	static int _index;
 };
 
-int Session::_index = 0;
-
-u_long BLOCKING = 0;
-u_long NONBLOCKING = 1;
+//int Session::_index = 0;
+//
+//u_long BLOCKING = 0;
+//u_long NONBLOCKING = 1;

@@ -56,6 +56,11 @@ int main()
 	vector<Session> s;
 	s.resize(15);
 
+	for (int i = 0;i < s.size();i++)
+	{
+		s[i].m_Sock = NULL;
+	}
+
 	fd_set read;
 	fd_set write;
 
@@ -101,8 +106,18 @@ int main()
 		{
 			if (FD_ISSET(ss.m_Sock, &read) > 0)
 			{
-				int recvLen = recv(ss.m_Sock, ss.buffer, sizeof(ss.buffer), 0);
-				cout << ss.buffer << "수신\n";
+				int recvLen = recv(ss.m_Sock, (char*)&ss.m_Buffer, sizeof(ss.m_Buffer), 0);
+
+				NetBuffer _recvData = {};
+
+				_recvData._task = ntohl(ss.m_Buffer._task);
+				_recvData._dir[0] = ntohf(ss.m_Buffer._dir[0]);
+				_recvData._dir[1] = ntohf(ss.m_Buffer._dir[1]);
+
+				cout << _recvData._task << '\n';
+				cout << _recvData._dir[0] << '\n';
+				cout << _recvData._dir[1] << '\n';
+				cout << "수신" << '\n';
 				ss.recvLen = recvLen;
 			}
 		}
@@ -110,28 +125,35 @@ int main()
 		// send의 조건이 상대 recv buffer 비어져있을때
 		for (Session& ss : s)
 		{
+			if (ss.m_Sock == NULL)
+				continue;
+
 			if (FD_ISSET(ss.m_Sock, &write) > 0)
 			{
-				if (!ss._register)
+				/*if (!ss._register)
 				{
 					ss._register = true;
 					char* buffer = (char*)&ss.index;
 					int sendLen = send(ss.m_Sock, buffer, sizeof(ss.index), 0);
 					cout << sendLen << '\n';
 					continue;
-				}
+				}*/
 
 				for (Session& _ss : s)
 				{
+					if (_ss.m_Sock == NULL)
+						continue;
+
 					if (&_ss == &ss)
 					{
 						continue;
 					}
 					else
 					{
-						int sendLen = send(_ss.m_Sock, &ss.buffer[ss.sendLen], ss.recvLen - ss.sendLen, 0);
-						cout << ss.buffer[ss.sendLen] << "송신\n";
-						ss.sendLen += sendLen;
+						NetBuffer recvData = {};
+
+						int sendLen = send(_ss.m_Sock, (char*)&ss.m_Buffer, sizeof(ss.m_Buffer), 0);
+						cout << "송신" << '\n';
 					}
 				}
 				ss.recvLen = 0;

@@ -9,6 +9,12 @@
 #pragma comment(lib, "ws2_32.lib")
 using namespace std;
 
+struct NetBuffer
+{
+	int _task;
+	float _dir[2];
+};
+
 void HandleError(string s)
 {
 	int err = ::WSAGetLastError();
@@ -18,7 +24,7 @@ void HandleError(string s)
 struct Session
 {
 	SOCKET m_Sock;
-	char buffer[1000];
+	NetBuffer m_Buffer;
 	int recvLen = 0;
 	int sendLen = 0;
 	bool _register = false;
