@@ -12,6 +12,7 @@ Engine::Engine()
 	, m_pDC(nullptr)
 	, m_Bitmap(nullptr)
 {
+	m_Objects.resize(15);
 }
 
 Engine::~Engine()
@@ -41,17 +42,33 @@ void Engine::Progress()
 	Render();
 }
 
+void Engine::MoveObjectX(int _register, int _dir)
+{
+	if (m_Objects.size() <= _register)
+		return;
+
+	GameObject* _obj = Engine::GetInst()->GetRegisterObject(_register);
+	Vec2 _temp = _obj->GetDIr();
+	_temp.x = _dir;
+	_obj->SetDir(_temp);
+}
+
+void Engine::MoveObjectY(int _register, int _dir)
+{
+	if (m_Objects.size() <= _register)
+		return;
+
+	GameObject* _obj = Engine::GetInst()->GetRegisterObject(_register);
+	Vec2 _temp = _obj->GetDIr();
+	_temp.y = _dir;
+	_obj->SetDir(_temp);
+}
+
 void Engine::Initialize()
 {
 	TimeMgr::GetInst()->Awake();
 	InputMgr::GetInst()->Awake();
 	NetWorkMgr::GetInst()->Awake();
-
-	GameObject* _obj = new GameObject();
-	m_Objects.push_back(_obj);
-	_obj->SetPosition(Vec2(50.f, 100.f));
-	_obj->SetScale(Vec2(20.f, 20.f));
-	m_Objects.push_back(_obj);
 }
 
 void Engine::Update()
@@ -62,7 +79,8 @@ void Engine::Update()
 
 	for (size_t i = 0;i < m_Objects.size();i++)
 	{
-		m_Objects[i]->Update();
+		if(m_Objects[i]!=nullptr)
+			m_Objects[i]->Update();
 	}
 }
 
@@ -72,7 +90,8 @@ void Engine::Render()
 
 	for (size_t i = 0;i < m_Objects.size();i++)
 	{
-		m_Objects[i]->Render(m_pDC);
+		if (m_Objects[i] != nullptr)
+			m_Objects[i]->Render(m_pDC);
 	}
 
 	BitBlt(m_hDC, 0, 0, (int)m_Resolution.x, (int)m_Resolution.y, m_pDC, 0, 0, SRCCOPY);

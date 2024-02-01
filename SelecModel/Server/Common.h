@@ -12,7 +12,9 @@ using namespace std;
 struct NetBuffer
 {
 	int _task;
+	int _register;
 	float _dir[2];
+	float _pos[2];
 };
 
 void HandleError(string s)

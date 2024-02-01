@@ -99,6 +99,21 @@ int main()
 			cout << inet_ntoa(clientAddr.sin_addr) << " : " << ntohs(clientAddr.sin_port) << "님이 접속했습니다!\n";
 			s[_index].m_Sock = clientSocket;
 			s[_index].index = _index;
+
+			NetBuffer _register = {};
+			_register._task = htonl(0);
+			_register._dir[0] = htonf(0.f);
+			_register._dir[0] = htonf(0.f);
+			_register._pos[0] = htonf(0.f);
+			_register._pos[0] = htonf(0.f);
+			_register._register = htonl(_index);
+			
+			::send(clientSocket, (char*)&_register, sizeof(_register), 0);
+
+			_register._task =  htonl(1);
+
+			s[_index].m_Buffer = _register;
+			s[_index].recvLen = sizeof(_register);
 			_index++;
 		}
 
@@ -113,11 +128,18 @@ int main()
 				_recvData._task = ntohl(ss.m_Buffer._task);
 				_recvData._dir[0] = ntohf(ss.m_Buffer._dir[0]);
 				_recvData._dir[1] = ntohf(ss.m_Buffer._dir[1]);
+				_recvData._pos[0] = ntohf(ss.m_Buffer._pos[0]);
+				_recvData._pos[1] = ntohf(ss.m_Buffer._pos[1]);
+				_recvData._register = ntohl(ss.m_Buffer._register);
 
 				cout << _recvData._task << '\n';
 				cout << _recvData._dir[0] << '\n';
 				cout << _recvData._dir[1] << '\n';
+				cout << _recvData._pos[0] << '\n';
+				cout << _recvData._pos[1] << '\n';
+				cout << _recvData._register << '\n';
 				cout << "수신" << '\n';
+
 				ss.recvLen = recvLen;
 			}
 		}
@@ -130,15 +152,6 @@ int main()
 
 			if (FD_ISSET(ss.m_Sock, &write) > 0)
 			{
-				/*if (!ss._register)
-				{
-					ss._register = true;
-					char* buffer = (char*)&ss.index;
-					int sendLen = send(ss.m_Sock, buffer, sizeof(ss.index), 0);
-					cout << sendLen << '\n';
-					continue;
-				}*/
-
 				for (Session& _ss : s)
 				{
 					if (_ss.m_Sock == NULL)
